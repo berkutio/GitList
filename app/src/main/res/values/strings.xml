@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">GitList</string>
+    <string name="data_loading">Loading data</string>
+    <string name="error_no_connection">No internet connection! Check network, than try again</string>
+</resources>
