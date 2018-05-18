@@ -8,15 +8,13 @@ import com.gitlist.BasePresenter;
 import com.gitlist.model.PresenterResult;
 import com.gitlist.model.RepoItem;
 import com.gitlist.network.ServiceGitHub;
+import com.gitlist.rx.SchedulerProvider;
 
 import java.util.List;
 
 import javax.inject.Inject;
 
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableObserver;
-import io.reactivex.schedulers.Schedulers;
 
 @InjectViewState
 public class MainPresenter extends BasePresenter<MainView> {
@@ -24,13 +22,15 @@ public class MainPresenter extends BasePresenter<MainView> {
     private static int currentPage = 1;
 
     private ServiceGitHub serviceGitHub;
-    private Resources resources;
+    private SchedulerProvider schedulerProvider;
+    //private Resources resources;
 
     @Inject
-    public MainPresenter(ServiceGitHub serviceGitHub, Resources resources) {
+    public MainPresenter(ServiceGitHub serviceGitHub, SchedulerProvider schedulerProvider) {
         this.serviceGitHub = serviceGitHub;
-        this.resources = resources;
-        Log.e("myLogs", "MainPresenter res " + resources);
+        this.schedulerProvider = schedulerProvider;
+        //this.resources = resources;
+        //Log.e("myLogs", "MainPresenter res " + resources);
     }
 
     public void test(){
@@ -40,8 +40,8 @@ public class MainPresenter extends BasePresenter<MainView> {
 
     public void getFirstRepos(){
         DisposableObserver<List<RepoItem>> disposableObserver = serviceGitHub.getReposList(String.valueOf(currentPage), "15")
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread()).subscribeWith(new DisposableObserver<List<RepoItem>>() {
+                .subscribeOn(schedulerProvider.io())
+                .observeOn(schedulerProvider.mainThread()).subscribeWith(new DisposableObserver<List<RepoItem>>() {
                     @Override
                     public void onNext(List<RepoItem> value) {
                         getViewState().onFirstRepoUpdate(new PresenterResult<>(value));
