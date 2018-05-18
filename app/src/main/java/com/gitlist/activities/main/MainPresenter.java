@@ -1,26 +1,64 @@
 package com.gitlist.activities.main;
 
+import android.content.res.Resources;
 import android.util.Log;
 
 import com.arellomobile.mvp.InjectViewState;
 import com.gitlist.BasePresenter;
+import com.gitlist.model.PresenterResult;
+import com.gitlist.model.RepoItem;
 import com.gitlist.network.ServiceGitHub;
 
+import java.util.List;
+
 import javax.inject.Inject;
+
+import io.reactivex.Observable;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.observers.DisposableObserver;
+import io.reactivex.schedulers.Schedulers;
 
 @InjectViewState
 public class MainPresenter extends BasePresenter<MainView> {
 
+    private static int currentPage = 1;
+
     private ServiceGitHub serviceGitHub;
+    private Resources resources;
 
     @Inject
-    public MainPresenter(ServiceGitHub serviceGitHub) {
+    public MainPresenter(ServiceGitHub serviceGitHub, Resources resources) {
         this.serviceGitHub = serviceGitHub;
-        Log.e("myLogs", "serviceGitHub " + serviceGitHub);
+        this.resources = resources;
+        Log.e("myLogs", "MainPresenter res " + resources);
     }
 
     public void test(){
         getViewState().test();
     }
+
+
+    public void getFirstRepos(){
+        DisposableObserver<List<RepoItem>> disposableObserver = serviceGitHub.getReposList(String.valueOf(currentPage), "15")
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread()).subscribeWith(new DisposableObserver<List<RepoItem>>() {
+                    @Override
+                    public void onNext(List<RepoItem> value) {
+                        getViewState().onFirstRepoUpdate(new PresenterResult<>(value));
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        getViewState().onFirstRepoUpdate(new PresenterResult<>(e.getMessage()));
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+        compositeDisposable.add(disposableObserver);
+    }
+
 
 }
