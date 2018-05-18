@@ -1,4 +1,4 @@
-package com.model;
+package com.gitlist.model;
 
 
 public class RepoItem {

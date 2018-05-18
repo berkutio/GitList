@@ -54,6 +54,7 @@ dependencies {
 
     implementation "com.squareup.retrofit2:retrofit:$retrofit"
     implementation "com.squareup.retrofit2:converter-gson:$retrofit"
+    implementation 'com.jakewharton.retrofit:retrofit2-rxjava2-adapter:1.0.0'
 
     implementation "com.arello-mobile:moxy:$moxy"
     implementation "com.arello-mobile:moxy-app-compat:$moxy"
