@@ -2,5 +2,5 @@
 <resources>
 
     <string name="base_url">https://api.github.com/</string>
-
+    <string name="repos_per_page">15</string>
 </resources>

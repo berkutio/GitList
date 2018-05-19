@@ -7,7 +7,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import com.arellomobile.mvp.presenter.InjectPresenter;
 import com.arellomobile.mvp.presenter.ProvidePresenter;
@@ -40,6 +39,7 @@ public class MainActivity extends BaseActivity implements MainView {
     ConstraintLayout mClNoConnection;
 
     private AdapterMainActivity mAdapterMainActivity;
+    private LinearLayoutManager mLayoutManager;
 
     @ProvidePresenter
     protected MainPresenter providePresenter() {
@@ -53,24 +53,40 @@ public class MainActivity extends BaseActivity implements MainView {
 
     @AfterViews
     protected void init() {
-        mRv.setLayoutManager(new LinearLayoutManager(this));
+        Log.e("myLogs", "init " + mainPresenter.getRepoItemList().size());
+        mLayoutManager = new LinearLayoutManager(this);
+        mRv.setLayoutManager(mLayoutManager);
         mAdapterMainActivity = new AdapterMainActivity();
         mRv.setAdapter(mAdapterMainActivity);
-        mainPresenter.getFirstRepos();
-    }
+        mRv.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+            }
 
-    @Override
-    public void test() {
-        Toast.makeText(this, "Test", Toast.LENGTH_LONG).show();
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                int lastVisibleItemPosition = mLayoutManager.findLastVisibleItemPosition();
+                //Log.e("myLogs", "onScrolled");
+                if(!mainPresenter.isLoading() && !mainPresenter.isLastPage()
+                        && lastVisibleItemPosition + MainPresenter.PAGE_LOADING_OFFSET >= mLayoutManager.getItemCount()) {
+                    Log.e("myLogs", "onScrolled add smth");
+                    //mAdapterMainActivity.addProgressItem();
+                    // TODO remove method argument
+                    mainPresenter.getNextRepos(0);
+                }
+            }
+        });
     }
 
     @Override
     public void onFirstRepoUpdate(@NonNull PresenterResult<List<RepoItem>> result) {
-        Log.e("myLogs", "onFirstRepoUpdate " + result);
+        //Log.e("myLogs", "onFirstRepoUpdate " + result.getResponse().size());
         if(result.getResponse() != null && result.getResponse().size() > 0){
+            mAdapterMainActivity.updateList(result.getResponse());
             mClDataLoading.setVisibility(View.GONE);
             mClNoConnection.setVisibility(View.GONE);
-            mAdapterMainActivity.updateList(result.getResponse());
             mRv.setVisibility(View.VISIBLE);
         }
 
@@ -84,6 +100,22 @@ public class MainActivity extends BaseActivity implements MainView {
             mRv.setVisibility(View.GONE);
         }
 
+//        if(!mainPresenter.isLastPage()){
+//            mAdapterMainActivity.addProgressItem();
+//        }
+
+    }
+
+    @Override
+    public void onNextRepoUpdate(@NonNull PresenterResult<List<RepoItem>> result) {
+        if(result.getResponse() != null && result.getResponse().size() > 0){
+            mAdapterMainActivity.addToList(result.getResponse());
+        }
+        if(mainPresenter.isLastPage()){
+            Log.e("myLogs", "isLastPage");
+            //mAdapterMainActivity.removeProgressItem();
+            Log.e("myLogs", "isLastPage " + mAdapterMainActivity.getItemCount());
+        }
     }
 
 

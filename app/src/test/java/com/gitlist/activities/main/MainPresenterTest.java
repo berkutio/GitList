@@ -51,9 +51,9 @@ public class MainPresenterTest {
         ServiceGitHub serviceGitHub = new ServiceGitHub(apiGitHub);
         testScheduler = new TestScheduler();
 
-        mainPresenter = new MainPresenter(serviceGitHub, new TestApplicationProvider(testScheduler));
-        mainPresenter.attachView(mainView);
-        mainPresenter.setViewState(mainView$$State);
+//        mainPresenter = new MainPresenter(serviceGitHub, new TestApplicationProvider(testScheduler));
+//        mainPresenter.attachView(mainView);
+//        mainPresenter.setViewState(mainView$$State);
     }
 
     @Test
