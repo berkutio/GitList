@@ -6,7 +6,7 @@ import com.gitlist.model.RepoItem;
 import java.util.List;
 
 import javax.inject.Inject;
-import io.reactivex.Observable;
+import io.reactivex.Single;
 
 public class ServiceGitHub {
 
@@ -18,7 +18,7 @@ public class ServiceGitHub {
     }
 
 
-    public Observable<List<RepoItem>> getReposList(String page, String perPage) {
+    public Single<List<RepoItem>> getReposList(String page, String perPage) {
         return apiGitHub.getRepos(page, perPage);
     }
 

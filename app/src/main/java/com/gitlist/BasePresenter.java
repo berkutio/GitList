@@ -19,7 +19,9 @@ public abstract class BasePresenter<View extends BaseView> extends MvpPresenter<
     }
 
 
-
+    protected void handleError(Throwable errror){
+        getViewState().onErrorHandle(errror);
+    }
 
 
 }

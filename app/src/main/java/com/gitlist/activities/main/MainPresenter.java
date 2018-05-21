@@ -18,11 +18,12 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
-
-import io.reactivex.observers.DisposableObserver;
+import io.reactivex.observers.DisposableSingleObserver;
 
 @InjectViewState
 public class MainPresenter extends BasePresenter<MainView> {
+
+    private DisposableSingleObserver<List<RepoItem>> disposableNextReposObserver;
 
     Map<String, Integer> map = new HashMap<>();
 
@@ -70,9 +71,9 @@ public class MainPresenter extends BasePresenter<MainView> {
         super.attachView(view);
         getFirstRepos();
         Log.e("myLogs", "attachView " + repoItemList.size());
-        Log.e("myLogs", "attachView  isLoading " + isLoading);
-        Log.e("myLogs", "attachView isLastPage " + isLastPage);
-        Log.e("myLogs", "attachView isLastPage " + currentPage);
+        Log.e("myLogs", "attachView   isLoading " + isLoading);
+        Log.e("myLogs", "attachView  isLastPage " + isLastPage);
+        Log.e("myLogs", "attachView currentPage " + currentPage);
     }
 
     @Override
@@ -80,9 +81,14 @@ public class MainPresenter extends BasePresenter<MainView> {
         super.detachView(view);
         Log.e("myLogs", "detachView " + repoItemList.size());
         //showDuplicates();
-        Log.e("myLogs", "detachView  isLoading " + isLoading);
-        Log.e("myLogs", "detachView isLastPage " + isLastPage);
-        Log.e("myLogs", "detachView isLastPage " + currentPage);
+        Log.e("myLogs", "detachView   isLoading " + isLoading);
+        Log.e("myLogs", "detachView  isLastPage " + isLastPage);
+        Log.e("myLogs", "detachView currentPage " + currentPage);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     private void addAll(List<RepoItem> value){
@@ -94,73 +100,76 @@ public class MainPresenter extends BasePresenter<MainView> {
     }
 
     public void getFirstRepos(){
+        isLoading = true;
         if(repoItemList.size() == 0) {
-            DisposableObserver<List<RepoItem>> disposableObserver = serviceGitHub.getReposList(String.valueOf(FIRST_PAGE), resources.getString(R.string.repos_per_page))
+            DisposableSingleObserver<List<RepoItem>> disposableObserver = serviceGitHub.getReposList(String.valueOf(FIRST_PAGE), resources.getString(R.string.repos_per_page))
                     .subscribeOn(schedulerProvider.io())
-                    .observeOn(schedulerProvider.mainThread()).subscribeWith(new DisposableObserver<List<RepoItem>>() {
+                    .observeOn(schedulerProvider.mainThread())
+                    .doOnError(this::handleError)
+                    .subscribeWith(new DisposableSingleObserver<List<RepoItem>>() {
                         @Override
-                        public void onNext(List<RepoItem> value) {
+                        public void onSuccess(List<RepoItem> value) {
                             Log.e("myLogs", "getFirstRepos onNext");
-                            if(value != null){
+                            if (value != null && value.size() > 0) {
                                 addAll(value);
                             }
                             getViewState().onFirstRepoUpdate(new PresenterResult<>(value));
+                            currentPage = 2;
+                            isLoading = false;
                         }
 
                         @Override
                         public void onError(Throwable e) {
                             getViewState().onFirstRepoUpdate(new PresenterResult<>(e.getMessage()));
-                        }
-
-                        @Override
-                        public void onComplete() {
-
+                            isLoading = false;
                         }
                     });
             compositeDisposable.add(disposableObserver);
-            currentPage = 2;
         } else {
-            ArrayList<RepoItem> list = new ArrayList<>();
+            ArrayList<RepoItem> list = new ArrayList<>(repoItemList.get(0).size() * currentPage);
             for (List<RepoItem> itemList: repoItemList) {
                 list.addAll(itemList);
             }
             getViewState().onFirstRepoUpdate(new PresenterResult<>(list));
+            isLoading = false;
         }
     }
 
 
     public void getNextRepos(int page){
         isLoading = true;
-        DisposableObserver<List<RepoItem>> disposableObserver = serviceGitHub.getReposList(String.valueOf(currentPage++), resources.getString(R.string.repos_per_page))
+        if(disposableNextReposObserver != null){
+            Log.e("myLogs", "getNextRepos remove disposable " + compositeDisposable.remove(disposableNextReposObserver));
+        }
+        disposableNextReposObserver = serviceGitHub.getReposList(String.valueOf(currentPage), resources.getString(R.string.repos_per_page))
                 .delay(5, TimeUnit.SECONDS)
                 .subscribeOn(schedulerProvider.io())
                 .observeOn(schedulerProvider.mainThread())
-                .subscribeWith(new DisposableObserver<List<RepoItem>>() {
+                .doOnError(this::handleError)
+                .subscribeWith(new DisposableSingleObserver<List<RepoItem>>() {
                     @Override
-                    public void onNext(List<RepoItem> value) {
+                    public void onSuccess(List<RepoItem> value) {
                         Log.e("myLogs", "getNextRepos onNext");
-                        if(value != null && value.size() < Integer.parseInt(resources.getString(R.string.repos_per_page))){
+                        if (value != null && value.size() < Integer.parseInt(resources.getString(R.string.repos_per_page))) {
                             isLastPage = true;
                         } else {
                             isLastPage = false;
                         }
-                        if(value != null){
+                        if (value != null && value.size() > 0) {
                             addAll(value);
                         }
+                        currentPage++;
                         getViewState().onNextRepoUpdate(new PresenterResult<>(value));
+                        isLoading = false;
                     }
 
                     @Override
                     public void onError(Throwable e) {
                         getViewState().onNextRepoUpdate(new PresenterResult<>(e.getMessage()));
-                    }
-
-                    @Override
-                    public void onComplete() {
                         isLoading = false;
                     }
                 });
-        compositeDisposable.add(disposableObserver);
+        compositeDisposable.add(disposableNextReposObserver);
     }
 
     public boolean isLoading() {

@@ -90,10 +90,6 @@ public class MainActivity extends BaseActivity implements MainView {
             mRv.setVisibility(View.VISIBLE);
         }
 
-        if(result.getError() != null) {
-            showError(result.getError());
-        }
-
         if(mAdapterMainActivity.getItemCount() == 0){
             mClDataLoading.setVisibility(View.GONE);
             mClNoConnection.setVisibility(View.VISIBLE);
