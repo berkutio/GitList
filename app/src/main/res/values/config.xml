@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="base_url">https://api.github.com/</string>
-    <string name="repos_per_page">15</string>
+    <string name="base_url">https://www.themoviedb.org/</string>
 </resources>

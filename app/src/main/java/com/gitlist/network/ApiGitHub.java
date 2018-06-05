@@ -1,21 +1,15 @@
 package com.gitlist.network;
 
-
-
-import com.gitlist.model.RepoItem;
-
-import java.util.List;
-
-import io.reactivex.Observable;
+import com.gitlist.model.testmodel.MovieResp;
 import io.reactivex.Single;
 import retrofit2.http.GET;
-import retrofit2.http.Query;
+import retrofit2.http.Url;
 
 public interface ApiGitHub {
 
 
-    @GET("users/JakeWharton/repos?")
-    Single<List<RepoItem>> getRepos(@Query("page") String page, @Query("per_page") String perPage);
+    @GET
+    Single<MovieResp> getRepos(@Url String url);
 
 
 }

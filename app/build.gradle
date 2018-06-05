@@ -75,5 +75,7 @@ dependencies {
     androidTestImplementation "com.android.support.test:runner:$runner"
     androidTestImplementation "com.android.support.test.espresso:espresso-core:$espresso"
 
+    compile 'com.squareup.picasso:picasso:2.5.2'
+
 
 }

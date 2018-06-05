@@ -1,13 +1,11 @@
 package com.gitlist.activities.main;
 
-
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
-
 import com.arellomobile.mvp.presenter.InjectPresenter;
 import com.arellomobile.mvp.presenter.ProvidePresenter;
 import com.gitlist.App;
@@ -15,13 +13,10 @@ import com.gitlist.BaseActivity;
 import com.gitlist.R;
 import com.gitlist.adapters.AdapterMainActivity;
 import com.gitlist.model.PresenterResult;
-import com.gitlist.model.RepoItem;
-
+import com.gitlist.model.testmodel.MovieResp;
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
-
-import java.util.List;
 
 @EActivity(R.layout.activity_main)
 public class MainActivity extends BaseActivity implements MainView {
@@ -53,38 +48,18 @@ public class MainActivity extends BaseActivity implements MainView {
 
     @AfterViews
     protected void init() {
-        Log.e("myLogs", "init " + mainPresenter.getRepoItemList().size());
         mLayoutManager = new LinearLayoutManager(this);
         mRv.setLayoutManager(mLayoutManager);
         mAdapterMainActivity = new AdapterMainActivity();
         mRv.setAdapter(mAdapterMainActivity);
-        mRv.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-            }
 
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-                super.onScrolled(recyclerView, dx, dy);
-                int lastVisibleItemPosition = mLayoutManager.findLastVisibleItemPosition();
-                //Log.e("myLogs", "onScrolled");
-                if(!mainPresenter.isLoading() && !mainPresenter.isLastPage()
-                        && lastVisibleItemPosition + MainPresenter.PAGE_LOADING_OFFSET >= mLayoutManager.getItemCount()) {
-                    Log.e("myLogs", "onScrolled add smth");
-                    //mAdapterMainActivity.addProgressItem();
-                    // TODO remove method argument
-                    mainPresenter.getNextRepos(0);
-                }
-            }
-        });
     }
 
     @Override
-    public void onFirstRepoUpdate(@NonNull PresenterResult<List<RepoItem>> result) {
-        //Log.e("myLogs", "onFirstRepoUpdate " + result.getResponse().size());
-        if(result.getResponse() != null && result.getResponse().size() > 0){
-            mAdapterMainActivity.updateList(result.getResponse());
+    public void onFirstRepoUpdate(@NonNull PresenterResult<MovieResp> result) {
+        Log.e("myLogs", "onFirstRepoUpdate " + result.getResponse());
+        if(result.getResponse() != null){
+            mAdapterMainActivity.updateList(result.getResponse().getResults());
             mClDataLoading.setVisibility(View.GONE);
             mClNoConnection.setVisibility(View.GONE);
             mRv.setVisibility(View.VISIBLE);
@@ -96,23 +71,6 @@ public class MainActivity extends BaseActivity implements MainView {
             mRv.setVisibility(View.GONE);
         }
 
-//        if(!mainPresenter.isLastPage()){
-//            mAdapterMainActivity.addProgressItem();
-//        }
-
     }
-
-    @Override
-    public void onNextRepoUpdate(@NonNull PresenterResult<List<RepoItem>> result) {
-        if(result.getResponse() != null && result.getResponse().size() > 0){
-            mAdapterMainActivity.addToList(result.getResponse());
-        }
-        if(mainPresenter.isLastPage()){
-            Log.e("myLogs", "isLastPage");
-            //mAdapterMainActivity.removeProgressItem();
-            Log.e("myLogs", "isLastPage " + mAdapterMainActivity.getItemCount());
-        }
-    }
-
 
 }
